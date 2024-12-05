@@ -64,39 +64,119 @@ public class MemoController {
         }
     }
 
-    // 메모 조회 기능
+    // 메모 단 건 조회 기능
+    /*
+    - 메모 하나를 조회할 수 있다. (READ)
+    - 조회할 memo에 대한 식별자 id값이 필요하다.
+    - 조회된 데이터가 응답된다.
+        - 응답 상태코드는 200 OK로 설정한다.
+    - 조회될 데이터가 없는 경우 Exception이 발생한다.
+        - 응답 상태코드는 404 NOT FOUND로 설정한다.
+     */
+
     @GetMapping("/{id}")
-    public MemoResponseDto findMemoById(@PathVariable Long id) {
+    public ResponseEntity<MemoResponseDto> findMemoById(@PathVariable Long id) {
         //@PathVariable 식별자를 파라미터로 바인딩할 때 사용
 
         Memo memo = memoList.get(id); //조회된 메모 객체
 
-        return new MemoResponseDto(memo);
+        // 식별자의 Memo가 없을 때 (Null -> Not Found)
+        if (memo == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // 정상적으로 조회
+        return new ResponseEntity<>(new MemoResponseDto(memo), HttpStatus.OK);
     }
 
+    // 메모 단 건 전체 수정 기능
+    /*
+    - 메모 하나를 전체 수정(덮어쓰기)할 수 있다. (UPDATE)
+    - 수정할 memo에 대한 식별자 id값이 필요하다.
+    - 수정할 요청 데이터(제목, 내용)가 꼭 필요하다.
+    - 수정된 데이터가 응답된다.
+        - 응답 상태코드는 200 OK로 설정한다.
+    - 수정될 데이터가 없는 경우 Exception이 발생한다.
+        - 응답 상태코드는 404 NOT FOUND 로 설정한다.
+     */
 
-
-
-
-    // 메모 수정 기능
     @PutMapping("/{id}")
-    public MemoResponseDto updateMemoById(
+    public ResponseEntity<MemoResponseDto> updateMemo(
             @PathVariable Long id,
             @RequestBody MemoRequestDto requestDto
     ) { // 실제 동작할 로직
         Memo memo = memoList.get(id);
 
+        // NPE 방지
+        if(memo == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        // 필수값 검증
+        if(requestDto.getTitle() == null || requestDto.getContents() == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
         memo.update(requestDto);
 
-        return new MemoResponseDto(memo);
+        return new ResponseEntity<>(new MemoResponseDto(memo), HttpStatus.OK);
+    }
+
+    // 메모 단 건 제목 수정 기능
+    /*
+    - 메모 하나의 제목을 수정(일부 수정)할 수 있다. (UPDATE)
+    - 수정할 memo에 대한 식별자 id값이 필요하다.
+    - 수정할 요청 데이터(제목)이 **꼭 필요하다.**
+        - 응답 상태코드는 400 BAD REQUEST로 설정한다.
+    - 수정된 데이터가 응답된다.
+        - 응답 상태코드는 200 OK로 설정한다.
+    - 수정될 데이터가 없는 경우 Exception이 발생한다.
+        - 응답 상태코드는 404 NOT FOUND 로 설정한다.
+     */
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<MemoResponseDto> updateTitle(
+            @PathVariable Long id,
+            @RequestBody MemoRequestDto requestDto
+    ) {
+        Memo memo = memoList.get(id);
+
+        // NPE 방지
+        if (memo == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        // 필수값 검증
+        if (requestDto.getTitle() == null || requestDto.getContents() != null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        memo.updateTitle(requestDto);
+
+        return new ResponseEntity<>(new MemoResponseDto(memo), HttpStatus.OK);
     }
 
     // 메모 삭제 기능
+    /*
+    - 메모를 삭제할 수 있다. (DELETE)
+    - 삭제할 memo에 대한 식별자 id값이 필요하다.
+    - 삭제될 데이터가 없는 경우 Exception이 발생한다.
+        - 응답 상태코드는 404 NOT FOUND로 설정한다.
+    - 응답 데이터는 없어도 무방하다.
+        - 응답 상태코드는 200 OK로 설정한다.
+     */
     @DeleteMapping("/{id}")
-    public void deleteMemo(
+    public ResponseEntity<Void> deleteMemo(
             @PathVariable Long id
     ) {
-        memoList.remove(id);
+        // memoList의 Key값에 id를 포함하고 있다면
+        if (memoList.containsKey(id)) {
+             // key가 id인 value 삭제
+            memoList.remove(id);
+
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        // 포함하고 있지 않은 경우
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 }

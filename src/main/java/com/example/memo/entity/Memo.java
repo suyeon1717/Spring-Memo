@@ -14,10 +14,13 @@ public class Memo {
     private String title;
     private String contents;
 
-    // 메모 생성 메서드
     public void update(MemoRequestDto requestDto) { // 매개변수: 요청 정보
         this.title = requestDto.getTitle();
         this.contents = requestDto.getContents();
+    }
+
+    public void updateTitle(MemoRequestDto requestDto) { // 매개변수: 요청 정보
+        this.title = requestDto.getTitle();
     }
 }
 
